@@ -71,7 +71,7 @@ export const isUser = async (req, res, next) => {
       }
 
       // add user to req
-      req.userInfo = user;
+      req.loggedInUser = user;
 
       next();
 
@@ -84,9 +84,10 @@ export const isUser = async (req, res, next) => {
 // IsBuyer
 export const isBuyer = async (req, res, next) => {
    // * Phase 1: Authorize user
+
    // extract token from headers
    const authorization = req?.headers?.authorization;
-   const splittedArray = authorization?.split("")
+   const splittedArray = authorization?.split(" ")
    const token = splittedArray.length === 2 && splittedArray[1]
 
    // if not token, terminate
@@ -104,18 +105,21 @@ export const isBuyer = async (req, res, next) => {
 
       // if not user, terminate
       if (!user) {
-         return res.status(401).send({ message: "Unauthorized" })
+         return res.status(401).send({ message: "You are not a registered user" })
       }
 
       // user role must be buyer
       if (user.role !== "buyer") {
-         return res.status(401).send({ message: "Unauthorized" })
+         return res.status(401).send({ message: "Unauthorized by role" })
       }
+
+      // add userInfo to req
+      req.loggedInUser = user;
 
       next();
 
    } catch (error) {
       // if something goes wrong while decrypting, terminate
-      return res.status(401).send({ message: "Unauthorized" })
+      return res.status(401).send({ message: "Unauthorized by error" })
    }
 }

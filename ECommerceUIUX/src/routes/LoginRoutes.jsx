@@ -8,6 +8,7 @@ import { ProductForm } from "../pages/Product/ProductForm";
 import Product from "../pages/Product/Product";
 import ProductDetail from "../pages/Product/ProductDetail";
 import UserProfile from "../pages/UserProfile";
+import Cart from "../pages/Cart";
 
 const userRole = localStorage.getItem("userRole");
 // console.log(userRole);
@@ -18,7 +19,7 @@ const loginRoutes = [
 		element: <MainLayout />,
 		children: [
 			{
-				path: "",
+				path: "home",
 				element: <Home />,
 			},
 			{
@@ -44,6 +45,10 @@ const loginRoutes = [
 			{
 				path: "user-details",
 				element: <UserProfile />,
+			},
+			{
+				path: "cart",
+				element: <Cart />,
 			},
 		],
 	},

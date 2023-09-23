@@ -1,5 +1,5 @@
 import SendIcon from "@mui/icons-material/Send";
-import { Alert, Box, CircularProgress, TextField } from "@mui/material";
+import { Box, CircularProgress, TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -10,20 +10,45 @@ import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import Select from "@mui/material/Select";
 import { Formik } from "formik";
-import React, { useState } from "react";
+import React from "react";
+import { useMutation } from "react-query";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import "../../../src/App.css";
 import "../../../src/index.css";
-import { $axios } from "../../lib/axios";
-import { useNavigate } from "react-router-dom";
-import { useMutation } from "react-query";
 import { addProductBySeller } from "../../lib/apis/product.apis";
-import CustomSnackbar from "../../components/CustomSnackbar";
+import { openErrorSnackbar } from "../../store/slices/snackbarSlices";
+
+const productCategories = [
+	"grocery",
+	"kitchen",
+	"clothing",
+	"electronics",
+	"furniture",
+	"cosmetics",
+	"bakery",
+	"liquor",
+];
+
+const colorList = [
+	"black",
+	"white",
+	"green",
+	"blue",
+	"orange",
+	"yellow",
+	"brown",
+	"red",
+	"purple",
+	"pink",
+	"grey",
+];
 
 export const ProductForm = () => {
-	const [loading, setLoading] = useState(false);
-	const [errorMessage, setErrorMessage] = useState("");
 	const [age, setAge] = React.useState("");
+
+	const dispatch = useDispatch();
 
 	const navigate = useNavigate();
 
@@ -31,39 +56,22 @@ export const ProductForm = () => {
 		setAge(event.target.value);
 	};
 
-	const productCategories = [
-		"grocery",
-		"kitchen",
-		"clothing",
-		"electronics",
-		"furniture",
-		"cosmetics",
-		"bakery",
-		"liquor",
-	];
-
-	const colorList = [
-		"black",
-		"white",
-		"green",
-		"blue",
-		"orange",
-		"yellow",
-		"brown",
-		"red",
-		"purple",
-		"pink",
-		"grey",
-	];
-
 	const addProductMutation = useMutation({
 		mutationKey: ["add-product"],
 		mutationFn: (values) => addProductBySeller(values),
 		onSuccess: () => {
 			navigate("/products");
+			dispatch(openErrorSnackbar("Product added successfully!!"));
+		},
+		onError: (error) => {
+			dispatch(
+				openErrorSnackbar(
+					error?.response?.data?.message || "Something went wrong."
+				)
+			);
 		},
 	});
-	console.log(addProductMutation);
+	// console.log(addProductMutation);
 
 	if (addProductMutation.isLoading) {
 		return (
@@ -75,16 +83,19 @@ export const ProductForm = () => {
 		);
 	}
 
+	// Radio: String to Boolean
+	let radioData = "false";
+	let stringToBoolean = (radioData) => {
+		if (radioData && typeof radioData === "string") {
+			if (radioData.tolowercase() === "true") return true;
+			if (radioData.tolowercase() === "false") return "false";
+		}
+		return radioData;
+	};
+	console.log(radioData);
+
 	return (
 		<>
-			<CustomSnackbar
-				open={addProductMutation.isError}
-				status="error"
-				message={
-					addProductMutation?.error?.response?.data ||
-					"Something went wrong"
-				}
-			></CustomSnackbar>
 			<div className="form-container">
 				<Formik
 					initialValues={{
@@ -120,6 +131,8 @@ export const ProductForm = () => {
 					})}
 					onSubmit={async (values) => {
 						addProductMutation.mutate(values);
+
+						console.log(values);
 					}}
 				>
 					{(formik) => (
@@ -176,11 +189,42 @@ export const ProductForm = () => {
 												value={true}
 												control={<Radio />}
 												label="Yes"
+												// onChange={() => {
+												// 	formik.setFieldValue(
+												// 		"freeShipping",
+												// 		radioData
+												// 	);
+												// }}
+												onClick={(event) => {
+													const value = event.target.value;
+													const freeShipping =
+														value === "true" ? true : false;
+													formik.setFieldValue(
+														"freeShipping",
+														freeShipping
+													);
+												}}
 											/>
 											<FormControlLabel
 												value={false}
 												control={<Radio />}
 												label="No"
+												// onChange={() => {
+												// 	formik.setFieldValue(
+												// 		"freeShipping",
+												// 		radioData
+												// 	);
+												// }}
+												onClick={(event) => {
+													const value = event.target.value;
+													const freeShipping =
+														value === "false" ? false : true;
+													console.log({ freeShipping });
+													formik.setFieldValue(
+														"freeShipping",
+														freeShipping
+													);
+												}}
 											/>
 										</RadioGroup>
 									</FormControl>

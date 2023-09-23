@@ -9,16 +9,19 @@ import Typography from "@mui/joy/Typography";
 import * as React from "react";
 
 import { Chip, CircularProgress, Grid, Popover, Stack } from "@mui/material";
-import "../../App.css";
-import { $axios } from "../../lib/axios";
-import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "react-query";
+import { useNavigate } from "react-router-dom";
+import "../../App.css";
 import { deleteSellerProduct } from "../../lib/apis/product.apis";
 
 const ProductCard = (props) => {
-	// Error State
+	// userRole from localStorage
+	const userRole = localStorage.getItem("userRole");
+
 	const queryClient = useQueryClient();
+
 	const navigate = useNavigate();
+
 	const { _id, name, price, category, company } = props;
 
 	const [anchorEl, setAnchorEl] = React.useState(null);
@@ -39,7 +42,7 @@ const ProductCard = (props) => {
 		mutationKey: ["delete-product"],
 		mutationFn: () => deleteSellerProduct(_id),
 		onSuccess: () => {
-			queryClient.invalidateQueries("seller-product");
+			queryClient.invalidateQueries("seller-products");
 		},
 	});
 	// console.log(deleteProductMutation);
@@ -110,23 +113,24 @@ const ProductCard = (props) => {
 							sx={{ marginLeft: "1rem" }}
 						/>
 					</Typography>
-					<IconButton
-						aria-label={name}
-						variant="secondary"
-						color="neutral"
-						size="sm"
-						onClick={(event) => {
-							handleClick(event);
-							deleteProductMutation.mutate();
-						}}
-						sx={{
-							position: "absolute",
-							top: "0.875rem",
-							right: "0.2rem",
-						}}
-					>
-						<DeleteOutlineIcon color="error" />
-					</IconButton>
+					{userRole === "seller" && (
+						<IconButton
+							aria-label={name}
+							variant="secondary"
+							color="neutral"
+							size="sm"
+							onClick={(event) => {
+								handleClick(event);
+							}}
+							sx={{
+								position: "absolute",
+								top: "0.875rem",
+								right: "0.2rem",
+							}}
+						>
+							<DeleteOutlineIcon color="error" />
+						</IconButton>
+					)}
 				</div>
 				<AspectRatio
 					minHeight="120px"

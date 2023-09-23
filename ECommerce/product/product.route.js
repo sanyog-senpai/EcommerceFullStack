@@ -14,7 +14,7 @@ router.delete("/product/delete/:id", isSeller, deleteProduct)
 router.get("/product/details/:id", isUser, getProductDetails)
 
 // Get Products by Buyer
-router.get("/product/buyer/all", isBuyer, getAllProducts)
+router.post("/product/buyer/all", isBuyer, getAllProducts)
 
 // Get Products by Seller
 router.post("/product/seller/all", isSeller, getSellerProducts)

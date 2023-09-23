@@ -3,11 +3,12 @@ import { loginValidationSchema, userValidationSchema } from "./user.validation.j
 import Joi from 'joi';
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { Cart } from '../cart/cart.entity.js';
 
 export const registerUser = async (req, res) => {
    // New User from body
    let newUser = req.body;
-   console.log(newUser)
+   // console.log(newUser)
 
    // Validate data
    try {
@@ -40,7 +41,7 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
    // extract email and password from request body
    const loginCredentials = req.body;
-   console.log(loginCredentials)
+   // console.log(loginCredentials)
 
    // Validate data
    try {
@@ -70,7 +71,7 @@ export const loginUser = async (req, res) => {
    const accessToken = jwt.sign({ email: user.email }, process.env.JWT_ACCESS_TOKEN_SECRET, {
       expiresIn: "1d"
    })
-   console.log(accessToken);
+   // console.log(accessToken);
 
    // removing password
    user.password = undefined;

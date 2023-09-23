@@ -111,12 +111,10 @@ a {
 }
 
 .nav-items {
-   flex-grow: 1;
    display: flex;
-   justify-content: end;
+   margin-left: auto;
    gap: 1.5rem;
    color: #fff;
-   padding-right: 1.5rem;
 }
 
 .nav-items a p {
@@ -197,6 +195,14 @@ a {
    display: flex;
    flex-direction: column;
    gap: 1rem;
+}
+
+.search-box {
+   margin: 1rem 0;
+   display: flex;
+   justify-content: end;
+   align-items: center;
+   gap: 1.5rem;
 }
 
 .product-card {

@@ -1,49 +1,51 @@
 import SendIcon from "@mui/icons-material/Send";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import {
 	Box,
 	Divider,
-	FormControlLabel,
-	FormLabel,
 	IconButton,
 	InputAdornment,
 	InputLabel,
 	MenuItem,
 	OutlinedInput,
-	Radio,
-	RadioGroup,
 	Select,
 	Typography,
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import { Formik } from "formik";
-import React, { useState } from "react";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import "../../../src/App.css";
 import "../../../src/index.css";
-import { Link, useNavigate } from "react-router-dom";
 import { $axios } from "../../lib/axios";
-import CustomSnackbar from "../../components/CustomSnackbar";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useMutation } from "react-query";
+import { useDispatch } from "react-redux";
+
+import { registerUser } from "../../lib/apis/user.apis";
+import { openErrorSnackbar } from "../../store/slices/snackbarSlices";
 
 export const Register = () => {
-	const [errorInfo, setErrorInfo] = useState({
-		isError: false,
-		errorMessage: "",
-	});
-	// const [registerInfo, setRegisterInfo] = useState({
-	// 	open: false,
-	// 	message: "",
-	// 	status: "",
-	// });
 	const navigate = useNavigate();
-	const [loading, setLoading] = useState(false);
+	const dispatch = useDispatch();
+	// Register Mutation
+	const registerMutation = useMutation({
+		mutationKey: ["register"],
+		mutationFn: (values) => registerUser(values),
+		onSuccess: () => {
+			navigate("/login");
+		},
+	});
+
+	if (registerMutation.isError) {
+		dispatch(
+			openErrorSnackbar(registerMutation?.error?.response?.data?.message)
+		);
+	}
+
 	const [showPassword, setShowPassword] = React.useState(false);
 
 	const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -53,12 +55,6 @@ export const Register = () => {
 	};
 	return (
 		<div className="form-container">
-			<CustomSnackbar
-				open={errorInfo.isError}
-				status="error"
-				message={errorInfo.errorMessage}
-			/>
-
 			<Formik
 				initialValues={{
 					firstName: "",
@@ -107,32 +103,30 @@ export const Register = () => {
 						.oneOf(["buyer", "seller", "Choose gender"]),
 				})}
 				onSubmit={async (values) => {
-					setLoading(true);
-					console.log(values);
-					// api hit
-					try {
-						const response = await $axios.post("/user/register", values);
-						console.log(response);
-
-						setLoading(false);
-
-						// set register success to true
-						// setRegisterInfo({
-						// 	open: true,
-						// 	message: response?.data?.message,
-						// 	status: "",
-						// });
-
-						// route to login
-						navigate("/login");
-					} catch (error) {
-						setErrorInfo({
-							isError: true,
-							errorMessage: error.response.data.message,
-						});
-						// console.log(error.response.data);
-						setLoading(false);
-					}
+					// setLoading(true);
+					// console.log(values);
+					// // api hit
+					// try {
+					// 	const response = await $axios.post("/user/register", values);
+					// 	console.log(response);
+					// 	setLoading(false);
+					// 	// set register success to true
+					// 	// setRegisterInfo({
+					// 	// 	open: true,
+					// 	// 	message: response?.data?.message,
+					// 	// 	status: "",
+					// 	// });
+					// 	// route to login
+					// 	navigate("/login");
+					// } catch (error) {
+					// 	setErrorInfo({
+					// 		isError: true,
+					// 		errorMessage: error.response.data.message,
+					// 	});
+					// 	// console.log(error.response.data);
+					// 	setLoading(false);
+					// }
+					registerMutation.mutate(values);
 				}}
 			>
 				{(formik) => (
@@ -296,7 +290,7 @@ export const Register = () => {
 							variant="contained"
 							endIcon={<SendIcon />}
 							type="submit"
-							disabled={loading}
+							disabled={registerMutation.isLoading}
 						>
 							Register
 						</Button>

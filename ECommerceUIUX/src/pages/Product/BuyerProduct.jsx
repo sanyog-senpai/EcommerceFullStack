@@ -1,40 +1,71 @@
-import { CircularProgress } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { $axios } from "../../lib/axios";
+/* eslint-disable react/prop-types */
+import { Pagination } from "@mui/material";
+import React, { useState } from "react";
+import { useQuery } from "react-query";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { getBuyerProducts } from "../../lib/apis/product.apis";
+import { openErrorSnackbar } from "../../store/slices/snackbarSlices";
+import NotFound from "../NotFound.jsx";
+import ProductCard from "./ProductCard";
 
-const BuyerProduct = () => {
-	const [loading, setLoading] = useState(false);
-	const [product, setProducts] = useState([]);
+const BuyerProduct = (props) => {
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
-	// fetch products
-	const fetchProducts = async () => {
-		try {
-			setLoading(true);
-			const response = await $axios.post("/product/buyer/all", {
-				page: 1,
+	const [page, setPage] = useState(1);
+
+	const { isLoading, error, isError, data } = useQuery({
+		queryKey: ["buyer-products", page, props.searchText],
+		queryFn: () =>
+			getBuyerProducts({
+				page: page,
 				limit: 10,
-			});
-			setProducts(response.data);
-			setLoading(false);
-		} catch (error) {
-			setLoading(false);
-			console.log(error.response.data);
-		}
+				searchText: props?.searchText || "",
+			}),
+	});
+	console.log(data);
+
+	const getPaginationData = (event, data) => {
+		// console.log(data);
+		setPage(data);
 	};
 
-	useEffect(() => {
-		fetchProducts();
-	}, []);
-
-	if (loading) {
-		return (
-			<div className="loader">
-				<CircularProgress />
-			</div>
+	if (isError) {
+		dispatch(
+			openErrorSnackbar(
+				error?.response?.data?.message ||
+					"Product cannot be fetched at this time."
+			)
 		);
 	}
 
-	return <div>Buyer Product</div>;
+	return (
+		<>
+			<div>
+				{!isLoading && data?.data?.products?.length === 0 ? (
+					<NotFound />
+				) : (
+					<>
+						<div className="card-container">
+							{data?.data?.products?.map((item) => {
+								return <ProductCard key={item._id} {...item} />;
+							})}
+						</div>
+						<div className="container flex-center">
+							<Pagination
+								className="my-2"
+								page={page}
+								count={data?.data?.totalPage}
+								color="primary"
+								onChange={getPaginationData}
+							/>
+						</div>
+					</>
+				)}
+			</div>
+		</>
+	);
 };
 
 export default BuyerProduct;

@@ -1,16 +1,20 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Button, CircularProgress, Pagination } from "@mui/material";
 import React, { useState } from "react";
 import { useQuery } from "react-query";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import CustomSnackbar from "../../components/CustomSnackbar";
 import { fetchSellerProducts } from "../../lib/apis/product.apis.js";
+import { openErrorSnackbar } from "../../store/slices/snackbarSlices";
 import NotFound from "../NotFound";
 import ProductCard from "./ProductCard";
 
-const SellerProduct = () => {
+const SellerProduct = (props) => {
 	const [page, setPage] = useState(1);
-	console.log(page);
+	// console.log(page);
+
+	const dispatch = useDispatch();
 
 	const navigate = useNavigate();
 
@@ -22,29 +26,39 @@ const SellerProduct = () => {
 	// Query
 	const getSellerProductQuery = useQuery({
 		// Re fetches page with dependent to page
-		queryKey: ["seller-products", { page }],
-		queryFn: () => fetchSellerProducts({ page, limit: 4 }),
+		queryKey: ["seller-products", { page, searchText: props?.searchText }],
+		queryFn: () =>
+			fetchSellerProducts({
+				page,
+				limit: 10,
+				searchText: props?.searchText || "",
+			}),
 		keepPreviousData: true,
 	});
-	console.log(getSellerProductQuery);
+	// console.log(getSellerProductQuery);
 
-	if (getSellerProductQuery.isLoading) {
+	if (getSellerProductQuery?.isError) {
+		dispatch(
+			openErrorSnackbar(
+				getSellerProductQuery?.error?.response?.data?.message ||
+					"Product cannot be fetched at this time."
+			)
+		);
+	}
+
+	if (getSellerProductQuery?.isLoading) {
 		return (
 			<div className="loader">
 				<CircularProgress />
 			</div>
 		);
 	}
+
 	return (
 		<>
 			<div>
-				<CustomSnackbar
-					open={getSellerProductQuery.isError}
-					status="error"
-					message="Products cannot be fetched at this time"
-				/>
-				{!getSellerProductQuery.isLoading &&
-				getSellerProductQuery.data.data.products.length === 0 ? (
+				{!getSellerProductQuery?.isLoading &&
+				getSellerProductQuery?.data?.data?.products?.length === 0 ? (
 					<NotFound />
 				) : (
 					<>
@@ -74,6 +88,7 @@ const SellerProduct = () => {
 						</div>
 						<div className="container flex-center">
 							<Pagination
+								className="my-2"
 								page={page}
 								count={getSellerProductQuery?.data?.data?.totalPage}
 								color="primary"

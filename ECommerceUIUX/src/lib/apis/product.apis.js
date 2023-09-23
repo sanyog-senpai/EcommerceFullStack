@@ -9,5 +9,9 @@ export const deleteSellerProduct = async (_id) => {
 }
 
 export const addProductBySeller = async (values) => {
-   return await $axios.post("/product/add")
+   return await $axios.post("/product/create", values)
+}
+
+export const getBuyerProducts = async (paginationData) => {
+   return await $axios.post("/product/buyer/all", paginationData)
 }

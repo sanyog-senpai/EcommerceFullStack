@@ -88,21 +88,47 @@ export const getProductDetails = async (req, res) => {
 export const getAllProducts = async (req, res) => {
    // extract query params from req.body
    const query = req.body
+   // console.log(query);
 
    // validate query params
    try {
-      getAllProductsValidation.validateAsync(query)
+      await getAllProductsValidation.validateAsync(query)
    } catch (error) {
       // if not valid, terminate
       return res.status(400).send({ message: error.message })
    }
 
+   // Match
+   // * let match = query.searchText ? { name: { $regex: query.searchText, $options: "i" } } : {}
+   let match = {};
+   if (query?.searchText) {
+      match.name = { $regex: query.searchText, $options: "i" };
+   }
+
+   // Price
+   let price = {}
+   if (query?.minPrice) {
+      price = { $gte: query.minPrice }
+   }
+   if (query?.maxPrice) {
+      price = { ...price, $lte: query.maxPrice }
+   }
+
+   match.price = price;
+
+   if (query?.category?.length) {
+      match.category = { $in: query.category }
+   }
+   // console.log(match);
+
+
    // find products
    // calculate skip
    const skip = (query.page - 1) * query.limit;
+
    const products = await Product.aggregate([
       {
-         $match: {},
+         $match: match,
       },
       {
          $skip: skip,
@@ -112,8 +138,12 @@ export const getAllProducts = async (req, res) => {
       }
    ])
 
+   // pagination count
+   const totalItems = await Product.find({}).count()
+   const totalPage = Math.ceil(totalItems / query.limit);
+
    // return product
-   return res.status(200).send(products)
+   return res.status(200).send({ products, totalPage })
 }
 
 // Get Seller Products
@@ -128,13 +158,18 @@ export const getSellerProducts = async (req, res) => {
       return res.status(400).send({ message: error.message })
    }
 
+   let match = query.searchText ? {
+      sellerId: sellerIdFromAuthMiddleware,
+      name: { $regex: query.searchText, $options: 'i' }
+   } : {
+      sellerId: sellerIdFromAuthMiddleware
+   }
+
    const skip = (query.page - 1) * query.limit;
 
    const products = await Product.aggregate([
       {
-         $match: {
-            sellerId: sellerIdFromAuthMiddleware,
-         },
+         $match: match,
       },
       {
          $skip: skip,

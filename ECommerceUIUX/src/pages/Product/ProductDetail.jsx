@@ -1,28 +1,37 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-irregular-whitespace */
-import React, { useEffect, useState } from "react";
-import product1 from "/product/Samsung Odessy G9.jpg";
-import "../../App.css";
-import { Button, Chip, CircularProgress, Typography } from "@mui/material";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import EditIcon from "@mui/icons-material/Edit";
-import { useParams } from "react-router-dom";
-import { $axios } from "../../lib/axios";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import RemoveIcon from "@mui/icons-material/Remove";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import { Button, Chip, CircularProgress, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import "../../App.css";
+import { $axios } from "../../lib/axios";
+import product1 from "/product/Samsung Odessy G9.jpg";
+import { addItemToCart } from "../../lib/apis/cart.apis";
+import { useMutation } from "react-query";
 
 const ProductDetail = (props) => {
-	const [productDetail, setProductDetail] = useState({});
-
 	// extract id
 	const params = useParams();
-	// console.log(params.id);
+	const productId = params.id;
 
-	const [counter, setCounter] = useState(0);
+	const navigate = useNavigate();
+
+	const [counter, setCounter] = useState(1);
+
+	// Add item to cart
+	const addItemToCartMutation = useMutation({
+		mutationKey: ["add-item-to-cart"],
+		mutationFn: addItemToCart({ productId, quantity: counter }),
+	});
+
+	const userRole = localStorage.getItem("userRole");
+
+	const [productDetail, setProductDetail] = useState({});
 
 	const [loading, setLoading] = useState(false);
-
-	const productId = params.id;
 
 	const getProductDetails = async () => {
 		try {
@@ -121,64 +130,101 @@ const ProductDetail = (props) => {
 							your enemy in the dirt. With NVIDIA G-SYNC and FreeSync
 							Premium Pro support, Odyssey matches every frame from your
 							graphics card, so you’re never caught short from moment to
-							moment.​The gaming world of your imagination made real. QHD
-							resolution brings you a display as wide as two QHD monitors
-							sitting side by side, with incredibly detailed, pin-sharp
-							images. Experience a more encompassing view with maximum
-							space to take in all the action. Customize your Odyssey
-							with distinct core color customization, allowing you to
-							match your monitor with the rest of your gamer setup.
+							moment.
 						</Typography>
 					</Typography>
-					<div className="counter flex gap-2">
-						<Button
-							size="small"
-							onClick={() => {
-								() => {
-									const newCount = counter + 1;
-									if (newCount >= productDetail.quantity) {
-										// return 1;
-										setCounter(productDetail.quantity);
-									} else {
-										setCounter(newCount);
-									}
-								};
-							}}
-						>
-							<RemoveIcon size="25" />
-						</Button>
-						<Typography variant="h5">{counter}</Typography>
-						<Button
-							size="small"
-							onClick={() => {
-								const newCount = counter - 1;
-								if (newCount <= 0) {
-									// return 1;
-									setCounter(1);
-								} else {
-									setCounter(newCount);
-								}
-							}}
-						>
-							<AddIcon size="25" />
-						</Button>
-					</div>
-					<div className="gap-2">
-						<Button variant="contained" color="primary">
-							Buy Me
-						</Button>
-						<Button variant="contained" color="success">
-							<ShoppingCartIcon
-								fontSize="small"
-								sx={{ marginRight: "8px" }}
-							/>
-							Add to Cart
-						</Button>
-						<Button variant="contained" color="warning">
-							<EditIcon fontSize="small" sx={{ marginRight: "5px" }} />
-							Edit
-						</Button>
-					</div>
+
+					{userRole === "buyer" && (
+						<>
+							<div className="counter flex gap-2">
+								<Typography>Quantity:</Typography>
+								<div className="flex">
+									<Button
+										size="small"
+										sx={{
+											minWidth: "40px",
+											minHeight: "40px",
+											padding: "0px",
+											background: "#f5f5f5",
+										}}
+										onClick={() => {
+											() => {
+												const newCount = counter - 1;
+												if (newCount <= 0) {
+													setCounter(1);
+												} else {
+													setCounter(newCount);
+												}
+											};
+										}}
+									>
+										<RemoveIcon size="25" />
+									</Button>
+									<Typography
+										variant="h5"
+										sx={{
+											minWidth: "40px",
+											minHeight: "40px",
+											textAlign: "center",
+											padding: "5px",
+										}}
+									>
+										{counter}
+									</Typography>
+									<Button
+										size="small"
+										sx={{
+											minWidth: "40px",
+											minHeight: "40px",
+											padding: "0px",
+											background: "#f5f5f5",
+										}}
+										onClick={() => {
+											const newCount = counter + 1;
+											if (newCount >= productDetail.quantity) {
+												setCounter(productDetail.quantity);
+											} else {
+												setCounter(newCount);
+											}
+										}}
+									>
+										<AddIcon size="25" />
+									</Button>
+								</div>
+							</div>
+							<div className="gap-2">
+								<Button variant="contained" color="primary">
+									Buy Now
+								</Button>
+								<Button
+									variant="contained"
+									color="success"
+									onClick={() => {
+										addItemToCartMutation.mutate();
+										navigate("/cart");
+									}}
+								>
+									<ShoppingCartIcon
+										fontSize="small"
+										sx={{ marginRight: "8px" }}
+									/>
+									Add to Cart
+								</Button>
+							</div>
+						</>
+					)}
+
+					{userRole === "seller" && (
+						<div className="gap-2">
+							<Button variant="contained" color="warning">
+								<EditIcon
+									fontSize="small"
+									sx={{ marginRight: "5px" }}
+								/>
+								Edit
+							</Button>
+						</div>
+					)}
 				</div>
 			</div>
 		</>

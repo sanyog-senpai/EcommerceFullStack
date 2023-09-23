@@ -1,7 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
 import SendIcon from "@mui/icons-material/Send";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import {
-	Alert,
 	FormControl,
 	IconButton,
 	InputAdornment,
@@ -11,26 +12,43 @@ import {
 	Typography,
 } from "@mui/material";
 import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
 import { Formik } from "formik";
-import React, { useState } from "react";
+import React from "react";
+import { useMutation } from "react-query";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import "../../../src/App.css";
 import "../../../src/index.css";
-import { $axios } from "../../lib/axios";
-import { Link, useNavigate } from "react-router-dom";
-import Divider from "@mui/material/Divider";
-import CustomSnackbar from "../../components/CustomSnackbar";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import Visibility from "@mui/icons-material/Visibility";
+import { loginUser } from "../../lib/apis/user.apis";
+import {
+	openErrorSnackbar,
+	openSuccessSnackbar,
+} from "../../store/slices/snackbarSlices";
 
 export const Login = () => {
-	const [loading, setLoading] = useState(false);
-	const [errorInfo, setErrorInfo] = useState({
-		isError: false,
-		errorMessage: "",
-	});
+	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	const [showPassword, setShowPassword] = React.useState(false);
+
+	// Login Mutation
+	const loginMutation = useMutation({
+		mutationKey: ["login"],
+		mutationFn: (values) => loginUser(values),
+		onSuccess: (res) => {
+			// console.log(res);
+			localStorage.setItem("accesstoken", res?.data?.accessToken);
+			localStorage.setItem("userRole", res?.data?.user?.role);
+			localStorage.setItem("userName", res?.data?.user?.firstName);
+			navigate("/home");
+			dispatch(openSuccessSnackbar("You are logged in successfully"));
+		},
+		onError: (error) => {
+			dispatch(openErrorSnackbar(error?.response?.data?.message));
+		},
+	});
 
 	const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -38,15 +56,9 @@ export const Login = () => {
 		event.preventDefault();
 	};
 
-	const navigate = useNavigate();
 	return (
 		<>
 			<div className="form-container">
-				<CustomSnackbar
-					open={errorInfo.isError}
-					status="error"
-					message={errorInfo.errorMessage}
-				/>
 				<Formik
 					initialValues={{ email: "", password: "" }}
 					validationSchema={Yup.object({
@@ -59,58 +71,50 @@ export const Login = () => {
 					})}
 					onSubmit={async (values) => {
 						// console.log(values);
-
 						// API hit
-						try {
-							setLoading(true);
-
-							// Hit Route
-							const response = await $axios.post("/user/login", values);
-							// console.log(response);
-
-							setLoading(false);
-
-							// extract accesstoken
-							const accesstoken = response.data.accessToken;
-
-							// save accesstoken to local storage
-							localStorage.setItem("accesstoken", accesstoken);
-							localStorage.setItem("isLoggedIn", true);
-							// console.log(localStorage.getItem("isLoggedIn"));
-
-							// user fullName
-							const userName =
-								response?.data?.user?.firstName +
-								" " +
-								response?.data?.user?.lastName;
-
-							// save user name and role in local storage
-							localStorage.setItem("fullName", userName);
-							localStorage.setItem(
-								"userRole",
-								response?.data?.user?.role
-							);
-
-							// firstName and lastName
-							localStorage.setItem(
-								"firstName",
-								response?.data?.user?.firstName
-							);
-							localStorage.setItem(
-								"lastName",
-								response?.data?.user?.lastName
-							);
-
-							// push to home page
-							navigate("/");
-						} catch (error) {
-							setErrorInfo({
-								isError: true,
-								errorMessage: error.response.data.message,
-							});
-							console.log(error.response.data.message);
-							setLoading(false);
-						}
+						// try {
+						// 	setLoading(true);
+						// 	// Hit Route
+						// 	const response = await $axios.post("/user/login", values);
+						// 	// console.log(response);
+						// 	setLoading(false);
+						// 	// extract accesstoken
+						// 	const accesstoken = response.data.accessToken;
+						// 	// save accesstoken to local storage
+						// 	localStorage.setItem("accesstoken", accesstoken);
+						// 	localStorage.setItem("isLoggedIn", true);
+						// 	// console.log(localStorage.getItem("isLoggedIn"));
+						// 	// user fullName
+						// 	const userName =
+						// 		response?.data?.user?.firstName +
+						// 		" " +
+						// 		response?.data?.user?.lastName;
+						// 	// save user name and role in local storage
+						// 	localStorage.setItem("fullName", userName);
+						// 	localStorage.setItem(
+						// 		"userRole",
+						// 		response?.data?.user?.role
+						// 	);
+						// 	// firstName and lastName
+						// 	localStorage.setItem(
+						// 		"firstName",
+						// 		response?.data?.user?.firstName
+						// 	);
+						// 	localStorage.setItem(
+						// 		"lastName",
+						// 		response?.data?.user?.lastName
+						// 	);
+						// 	// push to home page
+						// 	navigate("/");
+						// } catch (error) {
+						// 	setErrorInfo({
+						// 		isError: true,
+						// 		errorMessage: error.response.data.message,
+						// 	});
+						// 	console.log(error.response.data.message);
+						// 	setLoading(false);
+						// }
+						loginMutation.mutate(values);
 					}}
 				>
 					{(formik) => (
@@ -176,7 +180,7 @@ export const Login = () => {
 								variant="contained"
 								endIcon={<SendIcon />}
 								type="submit"
-								disabled={loading}
+								disabled={loginMutation.isLoading}
 							>
 								Send
 							</Button>

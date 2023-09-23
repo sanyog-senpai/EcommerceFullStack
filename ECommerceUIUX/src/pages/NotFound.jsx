@@ -5,17 +5,20 @@ import { Link } from "react-router-dom";
 import { Button } from "@mui/material";
 
 const NotFound = () => {
+	const userRole = localStorage.getItem("userRole");
 	return (
-		<div className="form-container">
+		<div className="form-container" style={{ height: "75vh" }}>
 			<div className="form-card text-center">
 				<ErrorTwoToneIcon sx={{ fontSize: "4.5rem", margin: "0 auto" }} />
 				Oops! Product Not found Sorry!
-				<Link to="/product/add">
-					Let's add product <br />
-					<Button variant="outlined" sx={{ marginTop: "1.5rem" }}>
-						Add Product
-					</Button>
-				</Link>
+				{userRole === "seller" && (
+					<Link to="/product/add">
+						Let's add product <br />
+						<Button variant="outlined" sx={{ marginTop: "1.5rem" }}>
+							Add Product
+						</Button>
+					</Link>
+				)}
 			</div>
 		</div>
 	);

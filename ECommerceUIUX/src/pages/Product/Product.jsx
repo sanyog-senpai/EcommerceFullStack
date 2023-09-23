@@ -1,9 +1,13 @@
-import React from "react";
-import SellerProduct from "./SellerProduct";
+import { TextField } from "@mui/material";
+import React, { useState } from "react";
+import ProductFilter from "../../components/ProductFilter";
 import BuyerProduct from "./BuyerProduct";
+import SellerProduct from "./SellerProduct";
 
 const Product = () => {
 	const role = localStorage.getItem("userRole");
+
+	const [searchText, setSearchText] = useState();
 
 	// if (role === "seller") {
 	// 	return <SellerProduct />;
@@ -12,7 +16,21 @@ const Product = () => {
 
 	return (
 		<div className="container">
-			{role === "seller" ? <SellerProduct /> : <BuyerProduct />}
+			<div className="search-box">
+				<ProductFilter />
+
+				<TextField
+					id="outlined-helperText"
+					placeholder="Search"
+					onChange={(event) => setSearchText(event.target.value)}
+					// Place Icon here
+				/>
+			</div>
+			{role === "seller" ? (
+				<SellerProduct searchText={searchText} />
+			) : (
+				<BuyerProduct searchText={searchText} />
+			)}
 		</div>
 	);
 };

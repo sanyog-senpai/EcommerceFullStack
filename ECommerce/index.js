@@ -3,6 +3,8 @@ import { dbConnect } from "./database/db_connect.js";
 import userRoutes from "./user/user.routes.js"
 import categoryRoutes from './category/category.routes.js'
 import productRoutes from './product/product.route.js'
+import cartRoutes from './cart/cart.routes.js'
+
 const app = express()
 
 // making express to know json
@@ -40,6 +42,9 @@ app.use(categoryRoutes)
 
 // Product Route
 app.use(productRoutes)
+
+// Cart Route
+app.use(cartRoutes)
 
 // console.log(process.env)   //env-cmd package info
 const port = process.env.API_PORT;
